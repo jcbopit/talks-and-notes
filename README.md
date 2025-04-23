@@ -1,2 +1,1 @@
-# talks-and-notes
-A collection of notes and beamer slides for the things I learn and share with the FinTech Club @ Indiana University
+A growing collection of lecture notes, Beamer slides, and presentations from things that I learn independently and shared with the FinTech Club @ Indiana University. Topics range from quantitative finance and stochastic modeling to applied math and computational tools.
