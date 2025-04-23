@@ -1,0 +1,267 @@
+\documentclass[10pt]{article}
+\usepackage{amsmath, amssymb, geometry}
+\geometry{margin=1.5in}
+\usepackage{parskip}
+\usepackage{enumitem}
+\setlist[itemize]{topsep=4pt, itemsep=2pt}
+
+\title{Lecture Notes: Introduction to Modeling Time Series}
+\author{Justin Offutt, VP Quantitative Development}
+\date{Fintech @ IU --- April 2025}
+
+\begin{document}
+	\maketitle
+	
+	\section*{1. What is a Stochastic Process?}
+	
+	A \textbf{stochastic process} is a mathematical model for a collection of random outcomes that evolve according to some index set, $T$:
+	\[
+	\{X_t\}_{t \in T}
+	\]
+	
+	Each \( X_t \) is a random variable, or a function that assigns a real value to each possible outcome in a probability space:
+	\[
+	X_t : \Omega \to \mathbb{R}
+	\]
+	
+	So in order to define a stochastic process, we need a probability space:
+	\begin{itemize}
+		\item \textbf{Sample space} \( \Omega \): the set of all possible outcomes (I like to think of this as every possible reality in a multidimensional universe)
+		\item \textbf{Event space (sigma-algebra)} \( \mathcal{F} \): the set of all events ($\mathcal{P}(\Omega)$ we can sensibly assign probabilities to
+		\item \textbf{Probability measure} \( \mathbb{P} \): a function that assigns a probability to each event in \( \mathcal{F} \), s.t:
+		\begin{itemize}
+			\item \( \mathbb{P}(A) \geq 0 \) for all \( A \in \mathcal{F} \)
+			\item \( \mathbb{P}(\Omega) = 1 \) (the probability of something occurring in the sample space is certain)
+			\item \( \mathbb{P}(A \cup B) = \mathbb{P}(A) + \mathbb{P}(B) \) if \( A \cap B = \emptyset \) (the probability of events is additive)
+		\end{itemize}
+	\end{itemize}
+	
+	Each element \( \omega \in \Omega \) represents one possible scenario (or one world in a multiverse), and the stochastic process is the underlying rule set which governs what the value of each \( X_t \) would be in that scenario.
+	
+	\subsection*{Chess Analogy}
+	Imagine tracking a chess player's rating over time:
+	\begin{itemize}
+		\item The rating changes after each match depending on a win/loss (no draw for simplicity sake)
+		\item The result of each match is uncertain, affected by randomness (opponent, fatigue, luck)
+		\item The rating is a value that evolves with some degree of uncertainty over the course of matches played
+	\end{itemize}
+	
+	This is exactly what a stochastic process models: a variable with uncertainty (rating) evolving across an index (games played).
+	
+	\subsection*{Simple Example: Chess Rating Process}
+	Let’s define a very simple stochastic process:
+	\begin{itemize}
+		\item Let \( T = \{1, 2, 3\} \): representing the first three matches played.
+		\item Start with rating 800
+		\item In each game:
+		\begin{itemize}
+			\item Win: gain 10 points
+			\item Loss: lose 10 points
+		\end{itemize}
+		\item \( \Omega = \{WWW, WWL, WLW, WLL, LWW, LWL, LLW, LLL\} \): all possible ordered win/loss sequences.
+	\end{itemize}
+	
+	\textbf{Event space:} \( \mathcal{F} = 2^\Omega \), the power set of \( \Omega \). That means it contains every subset of \( \Omega \), for example:
+	\begin{itemize}		
+		\item \( \{WWW\} \): "win all games"
+		\item \( \{WWL, WLW, LWW\} \): "win 2 out of 3 games"
+		\item \( \{LLL\} \): "lose all games"
+		\item \( \{WLW, WLL, LWL\} \): "exactly one win"
+		\item \( \Omega \): "some outcome happens"
+		\item \( \emptyset \): "no outcome happens"
+	\end{itemize}
+	
+	\textbf{Probability measure:}
+	Suppose the player has a 60\% chance of winning each game independently, derived from a win rate and other uncertain metric measured.
+	\begin{itemize}
+		\item \( \mathbb{P}(WWW) = 0.6^3 = 0.216 \)
+		\item \( \mathbb{P}(WWL) = 0.6^2 \times 0.4 = 0.144 \)
+		\item \( \mathbb{P}(WLW) = 0.6 \times 0.4 \times 0.6 = 0.144 \)
+		\item \( \mathbb{P}(LLL) = 0.4^3 = 0.064 \)
+		\item \( \mathbb{P}(WLW \text{ or } LWW) = 0.144 + 0.144 = 0.288 \)
+	\end{itemize}
+	
+	\textbf{Define the stochastic process:} Let \( X_t(\omega) \) be the player's rating after game \( t \) if the outcome is \( \omega \).
+	
+	For example, for \( \omega = WLW \) (think of this as one possible world out of the entire sample space, the world in which you win, lose, and win the three chess games):
+	\begin{align*}
+		X_1(\omega) &= 810 \\
+		X_2(\omega) &= 800 \\
+		X_3(\omega) &= 810
+	\end{align*}
+	
+	Then the realization is:
+	\[
+	\{X_1(\omega), X_2(\omega), X_3(\omega)\} = \{810, 800, 810\}
+	\]
+	
+	Think of it like this: the probability space is what governs the potential outcomes for the random process $X_t$, the above series is simply a realization (observation) of one possible $\omega \in \Omega$, in which your rating after the three games is 800 ELO.
+	
+	\subsection*{How the Event Space Plays Into the Stochastic Process}
+	The event space \( \mathcal{F} \) is essential because the events allow us to ask meaningful questions about the stochastic process.
+	
+	\begin{itemize}
+		\item Example event: \( A = \{WWW, WWL\} \) = "player wins first 2 games"
+		\item Compute: \( \mathbb{P}(A) = \mathbb{P}(WWW) + \mathbb{P}(WWL) = 0.216 + 0.144 = 0.36 \) 
+		\item Another event: \( B = \{WLW, LWW\} \) = "player wins exactly 2 games with one loss in the middle or first" 
+		\item Compute: \( \mathbb{P}(B) = 0.144 + 0.144 = 0.288 \)
+		\item Suppose we define a random variable \( X_3 \): the player's rating after 3 games
+		\item We can form events like:
+		\[ \{\omega \in \Omega : X_3(\omega) > 820\} = \{WWW\} \in \mathcal{F} \]
+		\item Then compute: \( \mathbb{P}(X_3 > 820) = \mathbb{P}(WWW) = 0.216 \)
+	\end{itemize}
+	
+	\textbf{Bottom line:} Without \( \mathcal{F} \), we couldn’t define or calculate probabilities of outcomes involving \( X_t \). It is what makes the stochastic process probabilistically useful.
+	
+	\section*{2. What is a Time Series?}
+	
+	A \textbf{time series} is a special type of stochastic process where the index set \( T \) is time — usually \( T = \mathbb{N} \) or a finite time horizon \( \{1, 2, \dots, n\} \).
+	\[
+	\{X_t\}_{t=1}^n
+	\]
+	
+	\begin{itemize}
+		\item Each \( X_t \) represents a quantity measured at time \( t \)
+		\item The sequence \( \{x_t\} \) you observe in the real world is a \textbf{realization}
+		\item Time series can be discrete (daily prices) or continuous (e.g., Brownian motion)
+	\end{itemize}
+	
+	\textbf{Example:} Apple stock prices over 4 days:
+	\[
+	A_4 = \{198.78, 202.54, 196.23, 200.01\}
+	\]
+	
+	This is one realization of the time series process \( \{A_t\} \).
+	
+	\subsection*{Why Modeling Financial Time Series is So Hard}
+	Let’s now reflect on what it would take to define a full stochastic process for a real financial asset, building on our example of Apple stock.
+	
+	\textbf{To do this, we would need:}
+	\begin{itemize}
+		\item A sample space \( \Omega \): the set of all possible price trajectories Apple stock could take. This isn't just 8 outcomes like in chess, but \textit{infinitely many}, since prices are real numbers and can take an uncountable number of trajectories.
+		\item An event space \( \mathcal{F} \): which subsets of these price paths we want to consider “events” (e.g., “price exceeds 210 next week”, “price falls 5\% this month”) — each of which must be mathematically measurable and sensible.
+		\item A probability measure \( \mathbb{P} \): which assigns probabilities to all these events. This is incredibly hard because market movements depend on:
+		\begin{itemize}
+			\item Global macroeconomics
+			\item Trader psychology
+			\item Random news shocks \\ \vdots \\ \vdots
+			\item (this list is infinitely long)
+
+		\end{itemize}
+	\end{itemize}
+	
+	In practice, we often have to \\
+	\textit{guess} the structure of \( \mathbb{P} \) from statistical data and the development of theory.
+	
+	\textbf{Compare this to the chess example:}
+	\begin{itemize}
+		\item Only 8 outcomes, easily modeled.
+		\item Probabilities can be assigned using coin-like assumptions.
+	\end{itemize}
+	
+	\textbf{Markets?} Infinitely many outcomes. No obvious assumptions. Probabilities must be guessed.
+	
+	\subsection*{Why Quants Get Paid So Much}
+	This complexity is exactly why \textbf{quants} are so valuable. They attempt to:
+	\begin{itemize}
+		\item Build stochastic processes that reflect real market dynamics
+		\item Estimate probabilities of events like crashes, spikes, or volatility shifts
+		\item Predict expected returns, risk, and correlations
+	\end{itemize}
+	
+	Doing this well requires:
+	\begin{itemize}
+		\item Deep math (measure theory, stochastic calculus, optimization)
+		\item Coding and simulation (Python, C++, Monte Carlo)
+		\item Intuition for economic and behavioral patterns
+	\end{itemize}
+	
+\section*{3. Stationarity and Non-Stationarity}
+
+Before moving into a broad overview of a few time-series models, understanding stationarity is crucial because many time series models (like AR, MA, ARIMA) rely on it to produce meaningful insight.
+
+\subsection*{Stationarity}
+A time series is \textbf{stationary} if its statistical properties do not change over time.
+
+\begin{itemize}
+	\item \textbf{Strict Stationarity:} The full probability distribution of the process is invariant under shifts in time (it doesn't matter where you look).
+	\item \textbf{Weak Stationarity (Second-order):}
+	\begin{itemize}
+		\item \textbf{Constant mean:} 
+		\[
+		\mathbb{E}[X_t] = \mu \quad \text{for all } t \in T
+		\]
+		
+		\item \textbf{Constant variance:} 
+		\[
+		\text{Var}(X_t) = \mathbb{E}[(X_t - \mu)^2] = \sigma^2 \quad \text{for all } t \in T
+		\]
+		
+		\item \textbf{Autocovariance depends only on lag:} 
+		\[
+		\text{Cov}(X_t, X_{t+h}) = \gamma(h) \quad \text{for all } t, h \in T
+		\]
+	\end{itemize}
+	\item If a series satisfies weak stationarity, most linear models (like AR) can be, and in practice are applied.
+\end{itemize}
+\subsection*{Non-Stationarity}
+A time series is \textbf{non-stationary} when its mean, variance, or other properties change over time.
+
+\begin{itemize}
+	\item Can arise from trends, seasonality, structural changes, or unit roots.
+	\item Non-stationary data can often be made stationary by transformations:
+	\begin{itemize}
+		\item \textbf{Differencing:} Subtracting the previous value 
+		\item \textbf{De-trending:} Removing a trend
+		\item \textbf{Log transformations:} Reducing exponential growth behavior
+	\end{itemize}
+\end{itemize}
+
+\textbf{Example:} Stock prices often exhibit a long-term upward trend violating stationarity.
+
+\section*{4. Overview of Common Time Series Models}
+
+Each of the models we study in time series analysis is an attempt to represent certain types of stochastic processes. They are just \emph{attempts}.
+
+\subsection*{White Noise}
+\begin{itemize}
+	\item A white noise process consists of i.i.d. random variables with constant mean and variance, and no autocorrelation.
+	\item Models pure randomness. 0 signal and structure.
+	\item Often used as a baseline or residual correction term in more complex models. If a model is effective, its residuals should look like white noise.
+	\item \textbf{Example:} The day-to-day random variation in stock returns due to uninformative retail trades.
+\end{itemize}
+
+\subsection*{Autoregressive (AR) Models}
+\begin{itemize}
+	\item AR models assume the current value depends on a finite number of past values.
+	\item Captures momentum, inertia, or short-term memory.
+	\item Used when a variable shows correlation with its own lagged values (remember autocovariance).
+	\item \textbf{Example:} Stock prices with short-term momentum trends (think momentum or swing trading).
+\end{itemize}
+
+\subsection*{ARIMA Models}
+\begin{itemize}
+	\item ARIMA stands for AutoRegressive Integrated Moving Average.
+	\item It combines autoregression, differencing to remove trends, and moving averages.
+	\item Designed for non-stationary time series with trends, cycles, and/or seasonality.
+	\item \textbf{Example 1:} Electricity demand over time, which varies seasonally.
+	\item \textbf{Example 2:} Monthly airline passenger counts (very seasonal).
+	\item \textbf{Example 3:} GDP or inflation, where long-term upward trends exist but short-term fluctuations matter.
+\end{itemize}
+
+\subsection*{GARCH Models}
+\begin{itemize}
+	\item GARCH stands for Generalized AutoRegressive Conditional Heteroskedasticity.
+	\item Models time varying volatility (think volatility clustering).
+	\item Useful when the variance is not constant and tends to cluster over time.
+	\item \textbf{Example 1:} Financial returns during crises or news releases.
+	\item \textbf{Example 2:} Exchange rates which may experience calm and volatile periods.
+	\item \textbf{Example 3:} Cryptocurrency price movements.
+\end{itemize}
+
+\textbf{Takeaway:} These models try to capture specific characteristics of real-world time series. No model fully captures the complexity of financial markets, they are just tools. Each model is useful when its assumptions \emph{roughly} match the behavior of the data.
+	
+\end{document}
+
+
+
