@@ -1,0 +1,128 @@
+\documentclass{beamer}
+\usepackage[mathscr]{euscript}
+\usepackage{amsmath,amsfonts,graphicx}
+\usepackage{tikz}
+\usetheme{Madrid}
+\usecolortheme{dolphin}
+\definecolor{fintechblue}{RGB}{7, 16, 51}
+\setbeamercolor{structure}{fg=fintechblue}
+\setbeamercolor{palette primary}{bg=fintechblue, fg=white}
+\setbeamercolor{palette secondary}{bg=fintechblue, fg=white}
+\setbeamercolor{palette tertiary}{bg=fintechblue, fg=white}
+\logo{\includegraphics[height=1.22cm]{../../Downloads/FinTech Association-01}}
+
+\title[Time Series Modeling]{\textbf{Introduction to Modeling Time Series}}
+\author{\textit{Justin Offutt} \ VP Quantitative Development}
+\date{\textbf{Fintech @ IU} \ April 2025}
+
+\begin{document}
+	\frame{\titlepage}
+
+\begin{frame}{What is a Stochastic Process?}
+	\begin{itemize}
+		\item In probability theory, a stochastic process is defined over a probability space. 
+		\[
+		X_t : \Omega \to \mathbb{R}
+		\]
+		where \( (\Omega, \mathcal{F}, \mathbb{P}) \) is the underlying probability space.
+		\item A \textbf{stochastic process} is a collection of random variables indexed by a set \( T \): 
+		\[
+		\{X_t\}_{t \in T}
+		\]
+		\item \textbf{Realization:} A single observed sequence from the process.
+		\[
+		\text{Stochastic Process: } \{X_t\} \quad \leadsto \quad \text{Observed Data: } \{x_t\}
+		\]
+	
+	\end{itemize}
+\end{frame}
+
+	
+
+\begin{frame}{What is a Time Series?}
+	\begin{itemize}
+		\item A time series is a stochastic process indexed by time:
+		\[
+		\{X_t\}_{t=1}^n
+		\]
+		\item For example, if you record Apple's stock price every day, the actual prices are a realization of the stochastic process \( \{A_t\} \).
+		\item Time can be indexed:
+		\begin{itemize}
+			\item \textbf{Discretely} — e.g., daily prices, where \( t \in \{1, 2, \dots\} \)
+			\item \textbf{Continuously} — e.g., Brownian motion \( \{W_t\}_{t \geq 0} \), where \( t \in \mathbb{R}_+ \)
+		\end{itemize}
+		\item Discrete example: Apple stock price over 4 days:
+		\[
+		A_4 = \{198.78, 202.54, 196.23, 200.01\}
+		\]
+	\end{itemize}
+\end{frame}
+
+
+
+	
+	% Slide: Stationarity
+	\begin{frame}{Stationarity vs Non-Stationarity}
+		\begin{itemize}
+			\item \textbf{Strict Stationarity}: probability distribution doesn't change over time.
+			\item \textbf{Weak Stationarity} (Second-order):
+			\begin{itemize}
+				\item Constant mean: \( \mathbb{E}[X_t] = \mu \)
+				\item Constant variance: \( \text{Var}(X_t) = \sigma^2 \)
+				\item Constant autocovariance: \( \text{Cov}(X_t, X_{t+h}) = \gamma(h) \)
+			\end{itemize}
+			\item Non-stationarity: presence of trends, changing variance, or unit root.
+		\end{itemize}
+	\end{frame}
+	
+	% Slide: White Noise
+	\begin{frame}{White Noise}
+		\begin{itemize}
+			\item A sequence of i.i.d. random variables.
+			\item \( \varepsilon_t \sim \text{WN}(0, \sigma^2) \): mean 0, constant variance.
+			\item No autocorrelation: \( \text{Cov}(\varepsilon_t, \varepsilon_{t+h}) = 0 \) for all \( h \neq 0 \).
+			\item Often used as the error term in time series models to model "noise" (e.g low-volume uninformed retail trades).
+		\end{itemize}
+	\end{frame}
+	
+	% Slide: AR
+	\begin{frame}{Autoregressive Model (AR)}
+		\begin{itemize}
+			\item \( X_t = \phi_1 X_{t-1} + \cdots + \phi_p X_{t-p} + \varepsilon_t \)
+			\item Captures momentum in data by apply regression on past values.
+			\item Stationarity condition depends on roots of the characteristic equation (this is as simple as solving a quadratic).
+			\item Partial autocorrelation function (aka PACF) cuts off after lag \( p \).
+		\end{itemize}
+	\end{frame}
+	
+	% Slide: ARIMA
+	\begin{frame}{ARIMA Model}
+		\begin{itemize}
+			\item \textbf{ARIMA}(p, d, q): Autoregressive Integrated Moving Average.
+			\item Useful for non-stationary series made stationary via differencing (up to some order of integration).
+			\item Differencing operator: \( \nabla X_t = X_t - X_{t-1} \)
+			\item Combines autoregression, differencing, and moving average components.
+		\end{itemize}
+	\end{frame}
+	
+	% Slide: GARCH
+	\begin{frame}{GARCH Model}
+		\begin{itemize}
+			\item Generalized Autoregressive Conditional Heteroskedasticity.
+			\item Captures volatility clustering: large changes followed by large changes.
+			\item \( \varepsilon_t = \sigma_t z_t \), \quad \( z_t \sim \text{WN}(0,1) \)
+			\item \( \sigma_t^2 = \alpha_0 + \alpha_1 \varepsilon_{t-1}^2 + \beta_1 \sigma_{t-1}^2 \)
+		\end{itemize}
+	\end{frame}
+	
+	\begin{frame}{Bottom Line}
+		\begin{itemize}
+			\item Stochastic processes are built from probability spaces, a triplet whose members are $\{\Omega, \mathcal{F}, \mathbb{P}\}$: sample space (all possible worlds), event space ($\mathcal{P}(\Omega)$, or all things where probability is sensible), and probability measure respectively (a function that assigns a probability to any event $A \in \mathcal{P})$
+			\item Bottom line: time-series are a specific kind stochastic process whose index, $t \in T$, is ordered by time.
+			\item All of these models are attempts of modeling underlying stochastic processes governing the behavior of realized time-series data.
+			
+			
+		
+	    \end{itemize}
+	\end{frame}
+\end{document}
